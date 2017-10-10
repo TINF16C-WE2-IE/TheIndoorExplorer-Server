@@ -5,7 +5,7 @@
  * Date: 10.10.2017
  * Time: 18:10
  */
-require ('databasecon.php');
+require('../databasecon.php');
 
 session_start();
 $username = $_SESSION["Username"]?? "";
