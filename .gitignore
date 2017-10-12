@@ -1,2 +1,4 @@
 .idea
+.directory
+oauthClientCredentials.php
 databasecon.php

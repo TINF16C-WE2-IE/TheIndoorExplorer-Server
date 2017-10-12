@@ -8,11 +8,11 @@
 require('../databasecon.php');
 
 session_start();
-$username = $_SESSION["Username"]?? "";
+$personId = $_SESSION['PersonId']?? "";
 if(isset($_GET['maplist'])) getMapList($con,"");
 else if(isset($_GET['jsonmap'])) getJsonMap($con,$_GET['mapid'],"");
 
-function getMapList($con,$username)
+function getMapList($con,$personId)
 {
     $sql = 'SELECT MapId,Name, JsonMap FROM Map WHERE isPrivate = 0';
     $map = array();
@@ -27,7 +27,7 @@ function getMapList($con,$username)
     $jsonFile = json_encode($map);
     echo $jsonFile;
 }
-function getJsonMap($con,$mapId,$username)
+function getJsonMap($con,$mapId,$personId)
 {
     $sql=$con->prepare('SELECT MapId,Name,JsonMap FROM Map WHERE MapId = ?');
     $sql->execute(array($mapId));
