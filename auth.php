@@ -6,16 +6,23 @@ $redirectUrl = 'https://'.$_SERVER['SERVER_NAME'].$_SERVER['PHP_SELF'];
 session_start();
 $action = $_GET['action'] ?? '';
 
+$provider = $_GET['providerId'] ?? 'none';
+$provider = isset($_GET['state']) ? explode('-', $_GET['state'])[0] : $provider;
+if(isset($providers[$provider])) {
+    define('PROVIDER', $providers[$provider]);
+} else {
+    die('no valid provider');
+}
 
 if ($action == 'login')
 {
-    $_SESSION['state'] = PROVIDER['d'].'-'.hash('sha256', OAUTH_STATE_SECRET.microtime(true));
+    $_SESSION['state'] = PROVIDER['providerId'].'-'.hash('sha256', OAUTH_STATE_SECRET.microtime(true));
     unset($_SESSION['access_token']);
     $params = array(
         'client_id' => PROVIDER['clientId'],
         'redirect_uri' => $redirectUrl,
         'response_type' => 'code',
-        'scope' => 'read',
+        'scope' => PROVIDER['scope'],
         'state' => $_SESSION['state']
     );
     header('Location: '.PROVIDER['authorizeUrl'].'?'.http_build_query($params));
@@ -36,14 +43,8 @@ if (isset($_GET['code']))
         'code' => $_GET['code']
     ));
 
-    $userData = oauthRequest(PROVIDER['introspectUrl'], array(
-        'token' => $token->access_token,
-        'token_type_hint' => 'access_token'
-    ));
-    $_SESSION['username'] = $userData->username;
-    var_dump($token);    
-    var_dump($userData);
-    saveUserToDB($userData->username, PROVIDER['providerId']);
+    $username = getUsernameFromApi($token->access_token);
+    saveUserToDB($username, PROVIDER['providerId']);
 //    header('Location: ' . $_SERVER['PHP_SELF']);
 }
 
@@ -52,7 +53,8 @@ function oauthRequest($url, $post)
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
     curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post));
-    curl_setopt($ch, CURLOPT_USERPWD, PROVIDER['d'].':'.PROVIDER['clientSecret']);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: application/json'));
+    curl_setopt($ch, CURLOPT_USERPWD, PROVIDER['clientId'].':'.PROVIDER['clientSecret']);
     $response = curl_exec($ch);
     curl_close($ch);
     return json_decode($response);
@@ -64,12 +66,33 @@ function saveUserToDB($username, $provider) {
     if ($sql->execute(array($username, $provider))) {
         $sql = $con->prepare('SELECT PersonId FROM Person WHERE Username = ? AND Provider = ?');
         $sql->execute(array($username, $provider));
-        $row= $sql->fetch();
-        var_dump($row);
+        $row = $sql->fetch();
         if ($row) {
             $_SESSION['PersonId'] = $row['PersonId'];
         }
     } else die('User duplicate');    
+}
+
+function getUsernameFromApi($token) {
+    $username = '';
+    if (PROVIDER['providerId'] == 'nubenum') {
+        $userData = oauthRequest(PROVIDER['introspectUrl'], array(
+            'token' => $token,
+            'token_type_hint' => 'access_token'
+        ));
+        $username = $userData->username ?? '';
+    } else if (PROVIDER['providerId'] == 'github') {
+        $url = PROVIDER['introspectUrl'];
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Authorization: token '.$token, 'User-Agent: indoor-explorer'));
+        $response = curl_exec($ch);
+        curl_close($ch);
+        $userData = json_decode($response, true);
+        $username = $userData[0]['email'] ?? '';
+    }
+    if (strlen($username) > 0) return $username;
+    else die('got no username');
 }
 
 
