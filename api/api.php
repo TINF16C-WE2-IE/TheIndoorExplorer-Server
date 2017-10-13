@@ -11,6 +11,7 @@ session_start();
 $personId = $_SESSION['PersonId']?? "";
 if(isset($_GET['maplist'])) getMapList($con,"");
 else if(isset($_GET['jsonmap'])) getJsonMap($con,$_GET['mapid'],"");
+else if(isset($_GET['insertupdatemap'])) insertOrUpdateMap($con);
 
 function getMapList($con,$personId)
 {
@@ -44,5 +45,25 @@ function getJsonMap($con,$mapId,$personId)
     }else $map = array('error' => 'Error: No map with this id found.');
     $jsonFile = json_encode($map);
     echo $jsonFile;
+}
+
+function insertOrUpdateMap($con)
+{
+    //PRÜFEN OB EINGELOGGT
+    $json = json_decode(file_get_contents('php://input'),true);
+
+    $mapId = $json['id'];
+    $mapName = json_encode($json['name']);
+    $jsonMap = $json['map'];
+
+    if($mapId == '-1')
+    {
+        $sql = $con->prepare('INSERT INTO Map (Name, JsonMap, isPrivate) VALUES(?,?,?)');
+        $sql->execute(array($mapName,$jsonMap,1));
+        $mapId=$con->lastInsertId();
+
+        $sql = $con->prepare('INSERT INTO PersonMap (PersonId,MapId,WritePermission) VALUES(?,?,?) ');
+        $sql->execute(array($_SESSION['PersonId'],$mapId,1));
+    }
 }
 $con = null;
