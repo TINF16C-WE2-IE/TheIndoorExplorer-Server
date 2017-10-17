@@ -45,7 +45,7 @@ if (isset($_GET['code']))
 
     $username = getUsernameFromApi($token->access_token);
     saveUserToDB($username, PROVIDER['providerId']);
-//    header('Location: ' . $_SERVER['PHP_SELF']);
+    header('Location: https://tinf16c-we2-ie.github.io/');
 }
 
 function oauthRequest($url, $post) 
@@ -94,8 +94,5 @@ function getUsernameFromApi($token) {
     if (strlen($username) > 0) return $username;
     else die('got no username');
 }
-
-
-if (isset($_SESSION['PersonId'])): ?>
-    <?=$_SESSION['PersonId']?>
-<? endif; ?>
+?>
+Not a valid request
