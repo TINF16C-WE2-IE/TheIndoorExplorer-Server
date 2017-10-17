@@ -15,7 +15,7 @@ else if(isset($_GET['insertupdatemap'])) insertOrUpdateMap($con);
 else if(isset($_GET['getuserinfo'])) getUserInfo($con);
 
 
-function getMapList($con,$personId)
+function getMapList($con)
 {
     $sql = 'SELECT MapId,Name, JsonMap FROM Map WHERE isPrivate = 0';
     $map = array();
@@ -30,8 +30,14 @@ function getMapList($con,$personId)
     $jsonFile = json_encode($map);
     echo $jsonFile;
 }
-function getJsonMap($con,$mapId)
+function getJsonMap($con)
 {
+    $mapId=0;
+    if(isset($_GET['mapid']))
+    {
+        $mapId = $_GET['mapid'];
+    }
+
     $sql=$con->prepare('SELECT MapId,Name,JsonMap FROM Map WHERE MapId = ?');
     $sql->execute(array($mapId));
     $row= $sql->fetch();
