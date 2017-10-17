@@ -12,6 +12,7 @@ $personId = $_SESSION['PersonId']?? "";
 if(isset($_GET['maplist'])) getMapList($con,"");
 else if(isset($_GET['jsonmap'])) getJsonMap($con);
 else if(isset($_GET['insertupdatemap'])) insertOrUpdateMap($con);
+else if(isset($_GET['getuserinfo'])) getUserInfo($con);
 
 
 function getMapList($con,$personId)
@@ -90,6 +91,33 @@ function insertOrUpdateMap($con)
             {
                 echo json_encode(array('error' =>'Error: No Map and Person combination found'));
             }
+        }
+    }
+}
+function getUserInfo($con)
+{
+    if (!isset($_SESSION['PersonId']))
+    {
+        echo json_encode(array('info'=>'Info: No user logged in'));
+    }
+    else
+    {
+        $sql = $con->prepare('SELECT Username FROM Person WHERE PersonId = ? ');
+        $sql->execute(array($_SESSION['PersonId']));
+        $row = $sql->fetch();
+        if($row)
+        {
+            $info = array(
+                'id'=> $_SESSION['PersonId'],
+                'username'=> $row['Username']
+            );
+
+            $jsonFile= json_encode($info);
+            echo $jsonFile;
+        }
+        else
+        {
+            echo json_encode(array('erro'=>'Error: no person found'));
         }
     }
 }
