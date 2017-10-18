@@ -38,7 +38,7 @@ function getJsonMap($con)
         $mapId = $_GET['mapid'];
     }
 
-    $sql=$con->prepare('SELECT MapId,Name,JsonMap FROM Map WHERE MapId = ?');
+    $sql=$con->prepare('SELECT MapId,Name,JsonMap,IsPrivate FROM Map WHERE MapId = ?');
     $sql->execute(array($mapId));
     $row= $sql->fetch();
     if($row)
@@ -47,6 +47,7 @@ function getJsonMap($con)
             'id' => (int)$row['MapId'],
             'name' => $row['Name'],
             'map' => json_decode($row ['JsonMap'], true),
+            'private' => $row['isPrivate'],
             'permission' => 0,
             'favorite' => false
         );
@@ -62,6 +63,7 @@ function insertOrUpdateMap($con)
     $mapId = $json['id'];
     $mapName = $json['name'];
     $jsonMap = json_encode( $json['map']);
+    $isPrivate = $json['private'];
 
     if(!isset($_SESSION['PersonId'])) echo json_encode(array('error'=>'Error: No user logged in'));
     else
@@ -70,7 +72,7 @@ function insertOrUpdateMap($con)
         if($mapId == -1)
         {
             $sql = $con->prepare('INSERT INTO Map (Name, JsonMap, isPrivate) VALUES(?,?,?)');
-            $sql->execute(array($mapName,$jsonMap,1));
+            $sql->execute(array($mapName,$jsonMap,$isPrivate));
             $mapId=$con->lastInsertId();
 
             $sql = $con->prepare('INSERT INTO PersonMap (PersonId,MapId,WritePermission) VALUES(?,?,?) ');
@@ -82,12 +84,13 @@ function insertOrUpdateMap($con)
             $sql = $con->prepare('SELECT WritePermission FROM PersonMap WHERE MapId = ? AND PersonId = ?');
             $sql->execute(array($mapId,$_SESSION['PersonId']));
             $row= $sql->fetch();
+
             if($row)
             {
                 if ($row['WritePermission'] == 1)
                 {
-                    $sql = $con->prepare('UPDATE Map SET Name=?, JsonMap=? WHERE MapId = ?');
-                    $sql->execute(array($mapName,$jsonMap,$mapId));
+                    $sql = $con->prepare('UPDATE Map SET Name=?, JsonMap=?, IsPrivate =? WHERE MapId = ?');
+                    $sql->execute(array($mapName,$jsonMap,$isPrivate,$mapId));
                 }
                 else
                 {
@@ -114,7 +117,7 @@ function getUserInfo($con)
         if($row)
         {
             $info = array(
-                'id'=> $_SESSION['PersonId'],
+                'id'=> (int)$_SESSION['PersonId'],
                 'username'=> $row['Username']
             );
 
@@ -128,3 +131,4 @@ function getUserInfo($con)
     }
 }
 $con = null;
+
