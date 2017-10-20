@@ -12,7 +12,8 @@ $personId = $_SESSION['PersonId']?? "";
 if(isset($_GET['maplist'])) getMapList($con,"");
 else if(isset($_GET['jsonmap'])) getJsonMap($con);
 else if(isset($_GET['insertupdatemap'])) insertOrUpdateMap($con);
-else if(isset($_GET['getuserinfo'])) getUserInfo($con);
+else if(isset($_GET['userinfo'])) getUserInfo($con);
+
 
 
 function getMapList($con)
