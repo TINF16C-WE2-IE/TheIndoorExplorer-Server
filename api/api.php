@@ -47,7 +47,7 @@ function getJsonMap($con)
             'id' => (int)$row['MapId'],
             'name' => $row['Name'],
             'floors' => json_decode($row ['JsonMap'], true),
-            'private' => $row['isPrivate'],
+            'visibility' => (int)$row['IsPrivate'],
             'permission' => 0,
             'favorite' => false
         );
@@ -63,7 +63,7 @@ function insertOrUpdateMap($con)
     $mapId = $json['id'];
     $mapName = $json['name'];
     $jsonMap = json_encode( $json['map']);
-    $isPrivate = $json['private'];
+    $isPrivate = (int)$json['visibility'];
 
     if(!isset($_SESSION['PersonId'])) echo json_encode(array('error'=>'Error: No user logged in'));
     else
