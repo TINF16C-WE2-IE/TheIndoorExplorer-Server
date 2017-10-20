@@ -46,7 +46,7 @@ function getJsonMap($con)
         $map = array(
             'id' => (int)$row['MapId'],
             'name' => $row['Name'],
-            'map' => json_decode($row ['JsonMap'], true),
+            'floors' => json_decode($row ['JsonMap'], true),
             'private' => $row['isPrivate'],
             'permission' => 0,
             'favorite' => false
@@ -126,7 +126,7 @@ function getUserInfo($con)
         }
         else
         {
-            echo json_encode(array('erro'=>'Error: no person found'));
+            echo json_encode(array('error'=>'Error: no person found'));
         }
     }
 }
