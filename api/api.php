@@ -69,7 +69,7 @@ function getJsonMap($con)
         $map = array(
             'id' => (int)$row['MapId'],
             'name' => $row['Name'],
-            'floors' => json_decode($row ['JsonMap'], true),
+            'floors' => json_decode($row['JsonMap'], true),
             'visibility' => (int)$row['IsPrivate'],
             'permission' => 0,
             'favorite' => false
@@ -82,10 +82,9 @@ function getJsonMap($con)
 function insertOrUpdateMap($con)
 {
     $json = json_decode(file_get_contents('php://input'),true);
-
     $mapId = $json['id'];
     $mapName = $json['name'];
-    $jsonMap = json_encode( $json['map']);
+    $jsonMap = json_encode($json['floors']);
     $isPrivate = (int)$json['visibility'];
 
     if(!isset($_SESSION['PersonId'])) echo json_encode(array('error'=>'Error: No user logged in'));
@@ -100,6 +99,7 @@ function insertOrUpdateMap($con)
 
             $sql = $con->prepare('INSERT INTO PersonMap (PersonId,MapId,WritePermission) VALUES(?,?,?) ');
             $sql->execute(array($_SESSION['PersonId'],$mapId,1));
+            echo json_encode(array('success'=>true));
         }
         //Map update
         else
@@ -114,6 +114,7 @@ function insertOrUpdateMap($con)
                 {
                     $sql = $con->prepare('UPDATE Map SET Name=?, JsonMap=?, IsPrivate =? WHERE MapId = ?');
                     $sql->execute(array($mapName,$jsonMap,$isPrivate,$mapId));
+                    echo json_encode(array('success'=>true));
                 }
                 else
                 {
@@ -157,9 +158,9 @@ function getUserInfo($con)
 function logout()
 {
     if(session_destroy()){
-        echo 'Logout successful';
+        echo '{"success":true}';
     }else {
-        echo 'Logout failed';
+        echo '{"error":true}';
     }
 }
 
