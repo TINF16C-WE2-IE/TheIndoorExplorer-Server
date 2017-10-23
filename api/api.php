@@ -13,6 +13,7 @@ if(isset($_GET['maplist'])) getMapList($con,"");
 else if(isset($_GET['jsonmap'])) getJsonMap($con);
 else if(isset($_GET['insertupdatemap'])) insertOrUpdateMap($con);
 else if(isset($_GET['userinfo'])) getUserInfo($con);
+else if (isset($_GET['logout'])) logout();
 
 
 
@@ -57,7 +58,6 @@ function getJsonMap($con)
         $personId = $_SESSION['PersonId'];
     }
 
-    //$sql=$con->prepare('SELECT MapId,Name,JsonMap,IsPrivate FROM Map WHERE MapId = ?');
     $sql=$con->prepare('SELECT Map.MapId,Name, JsonMap, IsPrivate 
                           FROM Map LEFT JOIN PersonMap 
                           ON Map.MapId = PersonMap.MapId 
@@ -152,6 +152,11 @@ function getUserInfo($con)
             echo json_encode(array('error'=>'Error: no person found'));
         }
     }
+}
+
+function logout()
+{
+    session_destroy();
 }
 $con = null;
 
