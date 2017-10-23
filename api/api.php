@@ -18,12 +18,25 @@ else if(isset($_GET['userinfo'])) getUserInfo($con);
 
 function getMapList($con)
 {
-    $sql = 'SELECT MapId,Name, JsonMap FROM Map WHERE isPrivate = 0';
+    if(isset($_SESSION['PersonId']))
+    {
+        $personId = $_SESSION['PersonId'];
+    }else
+    {
+        $personId = 0;
+    }
+//SELECT DISTINCT Map.MapId,Name,IsPrivate FROM Map LEFT JOIN PersonMap ON Map.MapId = PersonMap.MapId WHERE IsPrivate = 0 OR PersonMap.PersonId = 12
+    $sql = $con->prepare('SELECT DISTINCT Map.MapId,Name,IsPrivate 
+                          FROM Map LEFT JOIN PersonMap 
+                          ON Map.MapId = PersonMap.MapId 
+                          WHERE IsPrivate = 0 OR PersonMap.PersonId = ?');
+    $sql->execute(array($personId));
     $map = array();
-    foreach ($con->query($sql) as $row) {
+    foreach ($sql as $row) {
         $map[] = array(
-            'id' => $row['MapId'],
+            'id' => (int)$row['MapId'],
             'name' => $row['Name'],
+            'visibility' => (int)$row['IsPrivate'],
             'permission' => 0,
             'favorite' => false
         );
