@@ -1,3 +1,6 @@
 <IfModule mod_headers.c>
-    Header set Access-Control-Allow-Origin "*"
+    SetEnvIf Origin ^(.*)$ AccessControlAllowOrigin=$0
+    Header set Access-Control-Allow-Origin %{AccessControlAllowOrigin}e env=AccessControlAllowOrigin
+#   Header set Access-Control-Allow-Origin https://tinf16c-we2-ie.github.io
+    Header set Access-Control-Allow-Credentials true
 </IfModule>

@@ -16,6 +16,7 @@ if(isset($providers[$provider])) {
 
 if ($action == 'login')
 {
+    $_SESSION['referer'] = $_SERVER['HTTP_REFERER'];
     $_SESSION['state'] = PROVIDER['providerId'].'-'.hash('sha256', OAUTH_STATE_SECRET.microtime(true));
     unset($_SESSION['access_token']);
     $params = array(
@@ -45,7 +46,7 @@ if (isset($_GET['code']))
 
     $username = getUsernameFromApi($token->access_token);
     saveUserToDB($username, PROVIDER['providerId']);
-    header('Location: https://tinf16c-we2-ie.github.io/');
+    header('Location: '.$_SESSION['referer']);
 }
 
 function oauthRequest($url, $post) 
