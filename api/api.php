@@ -156,7 +156,40 @@ function getUserInfo($con)
 
 function logout()
 {
-    session_destroy();
+    if(session_destroy()){
+        echo 'Logout successful';
+    }else {
+        echo 'Logout failed';
+    }
+}
+
+function deleteMap($con)
+{
+    if(isset($_GET['mapid'])){
+        $mapId = $_GET['mapid'];
+    }else{
+        $mapId =0;
+    }
+    if(isset($_SESSION['PersonId']))
+    {
+        $personId =  $_SESSION['PersonId'];
+    }else {
+        $personId = 0;
+    }
+
+    $sql = $con->prepare('SELECT WritePermission FROM PersonMap WHERE PersonId = ? AND MapId = ?');
+    $sql->execute(array($personId,$mapId));
+    $row = $sql->fetch();
+    if($row){
+        //Delete line from PersonMap table
+        $sql = $con->prepare('DELETE FROM PersonMap WHERE PersonId = ? AND MapId = ?');
+        $sql->execute(array($personId,$mapId));
+        //Delte line from Map table
+        $sql = $con->prepare('DELETE FROM MAP WHERE MapId = ?');
+        $sql->execute(array($mapId));
+    }else {
+        echo json_encode(array('error'=>'Error: User does not have the correct permissions or the map was not found'));
+    }
 }
 $con = null;
 
