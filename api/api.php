@@ -47,13 +47,22 @@ function getMapList($con)
 function getJsonMap($con)
 {
     $mapId=0;
+    $personId = 0;
     if(isset($_GET['mapid']))
     {
         $mapId = $_GET['mapid'];
     }
+    if(isset($_SESSION['PersonId']))
+    {
+        $personId = $_SESSION['PersonId'];
+    }
 
-    $sql=$con->prepare('SELECT MapId,Name,JsonMap,IsPrivate FROM Map WHERE MapId = ?');
-    $sql->execute(array($mapId));
+    //$sql=$con->prepare('SELECT MapId,Name,JsonMap,IsPrivate FROM Map WHERE MapId = ?');
+    $sql=$con->prepare('SELECT Map.MapId,Name, JsonMap, IsPrivate 
+                          FROM Map LEFT JOIN PersonMap 
+                          ON Map.MapId = PersonMap.MapId 
+                          WHERE Map.MapId = ? AND ( IsPrivate = 0 OR PersonMap.PersonId = ?)');
+    $sql->execute(array($mapId, $personId));
     $row= $sql->fetch();
     if($row)
     {
