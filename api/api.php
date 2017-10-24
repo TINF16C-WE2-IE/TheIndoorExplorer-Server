@@ -18,13 +18,7 @@ else if (isset($_GET['deletemap'])) deleteMap($con);
 
 function getMapList($con)
 {
-    if(isset($_SESSION['PersonId']))
-    {
-        $personId = $_SESSION['PersonId'];
-    }else
-    {
-        $personId = 0;
-    }
+    if(userLoggedIn()) $personId = $_SESSION['PersonId'];
 
     $sql = $con->prepare('SELECT DISTINCT Map.MapId,Name,IsPrivate 
                           FROM Map LEFT JOIN PersonMap 
@@ -52,10 +46,7 @@ function getJsonMap($con)
     {
         $mapId = $_GET['mapid'];
     }
-    if(isset($_SESSION['PersonId']))
-    {
-        $personId = $_SESSION['PersonId'];
-    }
+    if (userLoggedIn()) $personId = $_SESSION['PersonId'];
 
     $sql=$con->prepare('SELECT Map.MapId,Name, JsonMap, IsPrivate 
                           FROM Map LEFT JOIN PersonMap 
@@ -75,7 +66,7 @@ function getJsonMap($con)
         );
         $jsonFile = json_encode($map);
         echo $jsonFile;
-    }else  http_response_code(404);//$map = array('error' => 'Error: No map with this id found.');
+    }else  http_response_code(404);
 }
 
 function insertOrUpdateMap($con)
@@ -86,77 +77,66 @@ function insertOrUpdateMap($con)
     $jsonMap = json_encode($json['floors']);
     $isPrivate = (int)$json['visibility'];
 
-    if(!isset($_SESSION['PersonId'])) http_response_code(401);//echo json_encode(array('error'=>'Error: No user logged in'));
+    if(userLoggedIn()) $personId = $_SESSION['PersonId'];
+
+    //Neue Map
+    if($mapId == -1)
+    {
+        $sql = $con->prepare('INSERT INTO Map (Name, JsonMap, isPrivate) VALUES(?,?,?)');
+        $sql->execute(array($mapName,$jsonMap,$isPrivate));
+        $mapId=$con->lastInsertId();
+
+        $sql = $con->prepare('INSERT INTO PersonMap (PersonId,MapId,WritePermission) VALUES(?,?,?) ');
+        $sql->execute(array($personId,$mapId,1));
+        http_response_code(201);
+        //NOCH ID ZURÜCKGEBEN
+    }
+    //Map update
     else
     {
-        //Neue Map
-        if($mapId == -1)
-        {
-            $sql = $con->prepare('INSERT INTO Map (Name, JsonMap, isPrivate) VALUES(?,?,?)');
-            $sql->execute(array($mapName,$jsonMap,$isPrivate));
-            $mapId=$con->lastInsertId();
+        $sql = $con->prepare('SELECT WritePermission FROM PersonMap WHERE MapId = ? AND PersonId = ?');
+        $sql->execute(array($mapId,$personId));
+        $row= $sql->fetch();
 
-            $sql = $con->prepare('INSERT INTO PersonMap (PersonId,MapId,WritePermission) VALUES(?,?,?) ');
-            $sql->execute(array($_SESSION['PersonId'],$mapId,1));
-            http_response_code(201);
-            //echo json_encode(array('success'=>true));
-        }
-        //Map update
-        else
+        if($row)
         {
-            $sql = $con->prepare('SELECT WritePermission FROM PersonMap WHERE MapId = ? AND PersonId = ?');
-            $sql->execute(array($mapId,$_SESSION['PersonId']));
-            $row= $sql->fetch();
+            if ($row['WritePermission'] == 1)
+            {
+                $sql = $con->prepare('UPDATE Map SET Name=?, JsonMap=?, IsPrivate =? WHERE MapId = ?');
+                $sql->execute(array($mapName,$jsonMap,$isPrivate,$mapId));
+                http_response_code(201);
 
-            if($row)
-            {
-                if ($row['WritePermission'] == 1)
-                {
-                    $sql = $con->prepare('UPDATE Map SET Name=?, JsonMap=?, IsPrivate =? WHERE MapId = ?');
-                    $sql->execute(array($mapName,$jsonMap,$isPrivate,$mapId));
-                    http_response_code(201);
-                    //echo json_encode(array('success'=>true));
-                }
-                else
-                {
-                    http_response_code(401);
-                    //echo json_encode(array('error' =>'Error: No write permission'));
-                }
-            }else
-            {
-                http_response_code(400);
-                //echo json_encode(array('error' =>'Error: No Map and Person combination found'));
             }
+            else
+            {
+                http_response_code(403);
+            }
+        }else
+        {
+            http_response_code(404);
         }
     }
 }
 function getUserInfo($con)
 {
-    if (!isset($_SESSION['PersonId']))
+    if(userLoggedIn()) $personId = $_SESSION['PersonId'];
+
+    $sql = $con->prepare('SELECT Username FROM Person WHERE PersonId = ? ');
+    $sql->execute(array($personId));
+    $row = $sql->fetch();
+    if($row)
     {
-        http_response_code(401);
-        //echo json_encode(array('info'=>'Info: No user logged in'));
+        $info = array(
+            'id'=> (int)$personId,
+            'username'=> $row['Username']
+        );
+
+        $jsonFile= json_encode($info);
+        echo $jsonFile;
     }
     else
     {
-        $sql = $con->prepare('SELECT Username FROM Person WHERE PersonId = ? ');
-        $sql->execute(array($_SESSION['PersonId']));
-        $row = $sql->fetch();
-        if($row)
-        {
-            $info = array(
-                'id'=> (int)$_SESSION['PersonId'],
-                'username'=> $row['Username']
-            );
-
-            $jsonFile= json_encode($info);
-            echo $jsonFile;
-        }
-        else
-        {
-            http_response_code(404);
-            //echo json_encode(array('error'=>'Error: no person found'));
-        }
+        http_response_code(404);
     }
 }
 
@@ -164,10 +144,8 @@ function logout()
 {
     if(session_destroy()){
         http_response_code(204);
-        //echo '{"success":true}';
     }else {
         http_response_code(400);
-        //echo '{"error":true}';
     }
 }
 
@@ -176,33 +154,41 @@ function deleteMap($con)
     if(isset($_GET['mapid'])){
         $mapId = $_GET['mapid'];
     }else{
-        $mapId =0;
+        http_response_code(404);
+        die();
     }
-    if(isset($_SESSION['PersonId']))
-    {
-        $personId =  $_SESSION['PersonId'];
-    }else {
-        $personId = 0;
-    }
+
+    if(userLoggedIn()) $personId = $_SESSION['PersonId'];
 
     $sql = $con->prepare('SELECT WritePermission FROM PersonMap WHERE PersonId = ? AND MapId = ?');
     $sql->execute(array($personId,$mapId));
     $row = $sql->fetch();
-    if($row['Writepermission'] == 1)
-    {
-        if($row){
+
+    if($row){
+        if($row['WritePermission'] == 1)
+        {
             //Delete line from PersonMap table
             $sql = $con->prepare('DELETE FROM PersonMap WHERE PersonId = ? AND MapId = ?');
             $sql->execute(array($personId,$mapId));
-            //Delte line from Map table
-            $sql = $con->prepare('DELETE FROM MAP WHERE MapId = ?');
+            //Delete line from Map table
+            $sql = $con->prepare('DELETE FROM Map WHERE MapId = ?');
             $sql->execute(array($mapId));
+            http_response_code(204);
         }else {
             http_response_code(403);
-            //echo json_encode(array('error'=>'Error: User does not have the correct permissions or the map was not found'));
         }
     }else{
-        http_response_code(403);
+        http_response_code(404);
+    }
+}
+
+function userLoggedIn(){
+    if(isset($_SESSION['PersonId']))
+    {
+        return true;
+    }else {
+        http_response_code(401);
+        die();
     }
 }
 $con = null;
