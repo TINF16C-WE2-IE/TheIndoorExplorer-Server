@@ -7,7 +7,13 @@
  */
 require('../databasecon.php');
 
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
+    die();
+}
+
 session_start();
+
 $personId = $_SESSION['PersonId'] ?? "";
 if (isset($_GET['maplist'])) getMapList($con, "");
 else if (isset($_GET['jsonmap'])) getJsonMap($con);
