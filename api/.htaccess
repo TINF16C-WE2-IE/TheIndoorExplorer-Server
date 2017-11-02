@@ -7,6 +7,8 @@
 </IfModule>
 RewriteEngine On
 RewriteRule ^v1/map$ api.php?maplist
+RewriteCond %{THE_REQUEST} OPTIONS
+RewriteRule ^v1/.*$ api.php
 RewriteCond %{THE_REQUEST} GET
 RewriteRule ^v1/map/(-?[0-9]+)$ api.php?jsonmap&mapid=$1
 RewriteCond %{THE_REQUEST} POST

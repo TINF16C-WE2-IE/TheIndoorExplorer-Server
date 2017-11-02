@@ -5,13 +5,14 @@
  * Date: 10.10.2017
  * Time: 18:10
  */
-require('../databasecon.php');
+require_once('../databasecon.php');
+require_once('../jsv4-php/src/Jsv4/Validator.php');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
     die();
 }
-
+error_reporting(E_ALL);
 session_start();
 
 $personId = $_SESSION['PersonId'] ?? "";
@@ -80,10 +81,12 @@ function insertOrUpdateMap($con)
     $json = json_decode(file_get_contents('php://input'), true);
     $mapId = $json['id'];
     $mapName = $json['name'];
+
     $jsonMap = json_encode($json['floors']);
+    validateMap($jsonMap);
+
     $isPrivate = (int)$json['visibility'];
-
-
+    
     $personId = userLoggedIn(true);
 
     //Neue Map
@@ -187,6 +190,16 @@ function userLoggedIn($idNecessary)
         die();
     } else {
         return 0;
+    }
+}
+
+function validateMap($json) {
+    $mapSchema = json_decode(file_get_contents('schema/map.json'), true);
+    $validation = Jsv4\Validator::validate($json, $mapSchema);
+    var_dump($validation);
+    if (!$validation->valid) {
+        http_response_code(400);
+        die();  
     }
 }
 
