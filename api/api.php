@@ -5,14 +5,16 @@
  * Date: 10.10.2017
  * Time: 18:10
  */
+
+error_reporting(E_ALL);
+use Jsv4\Validator;
 require_once('../databasecon.php');
-require_once('../jsv4-php/src/Jsv4/Validator.php');
+require_once('../jsv4-php/vendor/autoload.php');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
     die();
 }
-error_reporting(E_ALL);
 session_start();
 
 $personId = $_SESSION['PersonId'] ?? "";
@@ -194,8 +196,9 @@ function userLoggedIn($idNecessary)
 
 function validateMap($json)
 {
-    $mapSchema = json_decode(file_get_contents('schema/map.json'), true);
-    $validation = Jsv4\Validator::validate($json, $mapSchema);
+    $mapSchema = json_decode(file_get_contents('schema/map.json'));
+
+    $validation = Validator::validate(json_decode($json), $mapSchema);
     if (!$validation->valid) {
         http_response_code(400);
         die();

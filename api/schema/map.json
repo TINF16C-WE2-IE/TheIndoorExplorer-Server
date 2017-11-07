@@ -5,6 +5,7 @@
   "minItems": 1,  
   "items": {
     "type": "object",
+    "additionalProperties" : false,
     "required": [
        "walls", 
        "portals", 
