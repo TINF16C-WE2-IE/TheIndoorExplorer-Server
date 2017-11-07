@@ -86,7 +86,7 @@ function insertOrUpdateMap($con)
     validateMap($jsonMap);
 
     $isPrivate = (int)$json['visibility'];
-    
+
     $personId = userLoggedIn(true);
 
     //Neue Map
@@ -193,14 +193,14 @@ function userLoggedIn($idNecessary)
     }
 }
 
-function validateMap($json) {
+function validateMap($json)
+{
     $mapSchema = json_decode(file_get_contents('schema/map.json'), true);
     $validation = Jsv4\Validator::validate($json, $mapSchema);
     if (!$validation->valid) {
         http_response_code(400);
-        die();  
+        die();
     }
 }
-
 $con = null;
 
