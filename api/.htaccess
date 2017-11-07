@@ -15,6 +15,8 @@ RewriteCond %{THE_REQUEST} POST
 RewriteRule ^v1/map/(-?[0-9]+)$ api.php?insertupdatemap&mapid=$1
 RewriteCond %{THE_REQUEST} DELETE
 RewriteRule ^v1/map/(-?[0-9]+)$ api.php?deletemap&mapid=$1
+RewriteCond %{THE_REQUEST} POST
+RewriteRule ^v1/map/(-?[0-9]+)/publish$ api.php?publishmap&mapid=$1
 RewriteRule ^v1/user$ api.php?userinfo
 RewriteRule ^v1/user/logout$ api.php?logout
 
