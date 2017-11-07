@@ -97,8 +97,8 @@ function insertOrUpdateMap($con)
 
         $sql = $con->prepare('INSERT INTO PersonMap (PersonId,MapId,WritePermission) VALUES(?,?,?) ');
         $sql->execute(array($personId, $mapId, 1));
-        http_response_code(201);
-        //NOCH ID ZURÜCKGEBEN
+
+        echo json_encode(array('mapid' => $mapId));
     } //Map update
     else {
         $sql = $con->prepare('SELECT WritePermission FROM PersonMap WHERE MapId = ? AND PersonId = ?');
@@ -196,7 +196,6 @@ function userLoggedIn($idNecessary)
 function validateMap($json) {
     $mapSchema = json_decode(file_get_contents('schema/map.json'), true);
     $validation = Jsv4\Validator::validate($json, $mapSchema);
-    var_dump($validation);
     if (!$validation->valid) {
         http_response_code(400);
         die();  
