@@ -22,6 +22,7 @@ else if (isset($_GET['insertupdatemap'])) insertOrUpdateMap($con);
 else if (isset($_GET['userinfo'])) getUserInfo($con);
 else if (isset($_GET['logout'])) logout();
 else if (isset($_GET['deletemap'])) deleteMap($con);
+else if (isset ($_GET['publishmap'])) publishMap();
 
 function getMapList($con)
 {
@@ -85,14 +86,12 @@ function insertOrUpdateMap($con)
     $jsonMap = json_encode($json['floors']);
     validateMap($jsonMap);
 
-    $isPrivate = (int)$json['visibility'];
-
     $personId = userLoggedIn(true);
 
     //Neue Map
     if ($mapId == -1) {
         $sql = $con->prepare('INSERT INTO Map (Name, JsonMap, isPrivate) VALUES(?,?,?)');
-        $sql->execute(array($mapName, $jsonMap, $isPrivate));
+        $sql->execute(array($mapName, $jsonMap, 1));
         $mapId = $con->lastInsertId();
 
         $sql = $con->prepare('INSERT INTO PersonMap (PersonId,MapId,WritePermission) VALUES(?,?,?) ');
@@ -107,8 +106,8 @@ function insertOrUpdateMap($con)
 
         if ($row) {
             if ($row['WritePermission'] == 1) {
-                $sql = $con->prepare('UPDATE Map SET Name=?, JsonMap=?, IsPrivate =? WHERE MapId = ?');
-                $sql->execute(array($mapName, $jsonMap, $isPrivate, $mapId));
+                $sql = $con->prepare('UPDATE Map SET Name=?, JsonMap=? WHERE MapId = ?');
+                $sql->execute(array($mapName, $jsonMap, $mapId));
                 http_response_code(201);
 
             } else {
@@ -199,6 +198,29 @@ function validateMap($json)
     $validation = Jsv4\Validator::validate($json, $mapSchema);
     if (!$validation->valid) {
         http_response_code(400);
+        die();
+    }
+}
+
+function publishMap()
+{
+    include_once ("../mailer.php");
+
+    if (isset($_GET['mapid']))
+    {
+        $mapId =  $_GET['mapid'];
+        if(send_mail('indoor-explorer@nubenum.de', "Publish map $mapId", "Please validate and publish the map: $mapId"))
+        {
+            http_response_code(204);
+        }
+        else
+        {
+            http_response_code(418);
+        }
+    }
+    else
+    {
+        http_response_code(404);
         die();
     }
 }
