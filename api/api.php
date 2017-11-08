@@ -7,7 +7,9 @@
  */
 
 error_reporting(E_ALL);
+
 use Jsv4\Validator;
+
 require_once('../databasecon.php');
 require_once('../jsv4-php/vendor/autoload.php');
 
@@ -207,25 +209,22 @@ function validateMap($json)
 
 function publishMap()
 {
-    include_once ("../mailer.php");
+    include_once("../mailer.php");
+    $personId = $_SESSION['PersonId'] ?? 'error';
 
-    if (isset($_GET['mapid']))
-    {
-        $mapId =  $_GET['mapid'];
-        if(send_mail('indoor-explorer@nubenum.de', "Publish map $mapId", "Please validate and publish the map: $mapId"))
-        {
+
+    if (isset($_GET['mapid'])) {
+        $mapId = $_GET['mapid'];
+        if (send_mail('indoor-explorer@nubenum.de', "Publish map $mapId", "Please validate and publish the map: $mapId. I am $personId")) {
             http_response_code(204);
-        }
-        else
-        {
+        } else {
             http_response_code(418);
         }
-    }
-    else
-    {
+    } else {
         http_response_code(404);
         die();
     }
 }
+
 $con = null;
 
