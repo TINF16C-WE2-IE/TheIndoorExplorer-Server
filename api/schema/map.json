@@ -7,10 +7,11 @@
     "type": "object",
     "additionalProperties" : false,
     "required": [
-       "walls", 
-       "portals", 
-       "stairways", 
-       "label"
+      "walls", 
+      "portals", 
+      "stairways",
+      "elevators",
+      "label"
     ],  
     "properties": {
       "walls": {
@@ -70,9 +71,6 @@
                 }
               }
             }, 
-            "id": {
-              "type": "integer"
-            }, 
             "label": {
               "type": "string", 
               "maxLength": 500
@@ -107,8 +105,8 @@
                 }
               }
             }, 
-            "id": {
-              "type": "integer"
+            "group": {
+              "type": ["integer", "null"]
             }, 
             "label": {
               "type": "string", 
@@ -117,6 +115,32 @@
             "length": "integer",
             "canEnter": "boolean",
             "canLeave": "boolean"
+          }
+        }
+      }, 
+      "elevators": {
+        "type": "array", 
+        "items": {
+          "type": "object", 
+          "properties": {
+            "p": {
+              "type": "object", 
+              "properties": {
+                "x": {
+                  "type": "integer"
+                }, 
+                "y": {
+                  "type": "integer"
+                }
+              }
+            }, 
+            "group": {
+              "type": ["integer", "null"]
+            }, 
+            "label": {
+              "type": "string", 
+              "maxLength": 500
+            }
           }
         }
       }, 
