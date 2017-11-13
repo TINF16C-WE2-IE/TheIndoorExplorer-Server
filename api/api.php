@@ -54,25 +54,38 @@ function getMapList($con)
 function getJsonMap($con)
 {
     $mapId = 0;
+    $writePermission = 0;
     if (isset($_GET['mapid'])) {
         $mapId = $_GET['mapid'];
     }
 
     $personId = userLoggedIn(false);
 
-    $sql = $con->prepare('SELECT Map.MapId,Name, JsonMap, IsPrivate 
+    $sql = $con->prepare('SELECT Map.MapId,Name, JsonMap, IsPrivate
                           FROM Map LEFT JOIN PersonMap 
                           ON Map.MapId = PersonMap.MapId 
                           WHERE Map.MapId = ? AND ( IsPrivate = 0 OR PersonMap.PersonId = ?)');
     $sql->execute(array($mapId, $personId));
     $row = $sql->fetch();
+    $sql = $con->prepare('SELECT WritePermission FROM PersonMap WHERE PersonId = ? AND MapId = ?');
+    $sql->execute(array($personId, $mapId));
+    $row2 = $sql->fetch();
+    if($row2)
+    {
+        $writePermission = $row2['WritePermission'];
+    }
+    else
+    {
+        $writePermission = 0;
+    }
+
     if ($row) {
         $map = array(
             'id' => (int)$row['MapId'],
             'name' => $row['Name'],
             'floors' => json_decode($row['JsonMap'], true),
             'visibility' => (int)$row['IsPrivate'],
-            'permission' => 0,
+            'permission' => (int)$writePermission,
             'favorite' => false
         );
         $jsonFile = json_encode($map);
