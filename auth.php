@@ -16,7 +16,7 @@ if(isset($providers[$provider])) {
 
 if ($action == 'login')
 {
-    $_SESSION['referer'] = $_SERVER['HTTP_REFERER'];
+    $_SESSION['referer'] = $_GET['redirect'];
     $_SESSION['state'] = PROVIDER['providerId'].'-'.hash('sha256', OAUTH_STATE_SECRET.microtime(true));
     unset($_SESSION['access_token']);
     $params = array(
