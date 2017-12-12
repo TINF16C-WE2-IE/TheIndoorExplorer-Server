@@ -114,7 +114,7 @@ function insertOrUpdateMap($con)
         $sql = $con->prepare('INSERT INTO PersonMap (PersonId,MapId,WritePermission) VALUES(?,?,?) ');
         $sql->execute(array($personId, $mapId, 1));
 
-        echo json_encode(array('mapid' => $mapId));
+        echo json_encode(array('id' => (int)$mapId));
     } //Map update
     else {
         $sql = $con->prepare('SELECT WritePermission FROM PersonMap WHERE MapId = ? AND PersonId = ?');
